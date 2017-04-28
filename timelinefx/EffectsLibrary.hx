@@ -83,7 +83,7 @@ class EffectsLibrary {
 
     var updateTime:Float;
     var updateFrequency:Float;
-    var currentUpdateTime:Float;
+    public var currentUpdateTime:Float;
     var lookupFrequency:Float;
     var lookupFrequencyOverTime:Float;
 
@@ -116,6 +116,7 @@ class EffectsLibrary {
     function loadEffects(_fast:Fast):Void {
         for (e in _fast.nodes.EFFECT) {
             var effect = new Effect(null);
+            effect.effectsLib = this;
             effect.loadFromXML(e);
             addEffect(effect);
         }
@@ -141,8 +142,4 @@ class EffectsLibrary {
         currentUpdateTime = updateFrequency;
     }
 
-    public static function getCurrentUpdateTime():Float {
-        //TODO:
-        return -1.0;
-    }
 }

@@ -116,6 +116,7 @@ class Entity {
     public var runChildren:Bool = false;
     public var pixelsPerSecond:Float = 0.0;
 
+    public var effectsLib:EffectsLibrary = null;
 
     // no copy!
     public var matrix:Matrix2;
@@ -231,6 +232,8 @@ class Entity {
 
             runChildren = _other.runChildren;
             pixelsPerSecond = _other.pixelsPerSecond;
+
+            effectsLib = _other.effectsLib;
         }
 
         matrix = new Matrix2();
@@ -285,7 +288,7 @@ class Entity {
     }
 
     public function update():Bool {
-        var currentUpdateTime:Float = EffectsLibrary.getCurrentUpdateTime();
+        var currentUpdateTime:Float = effectsLib.currentUpdateTime;
 
         if (updateSpeed && speed != 0) {
             pixelsPerSecond = speed / currentUpdateTime;
