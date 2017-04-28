@@ -10,5 +10,5 @@ import timelinefx.ParticleManager;
 
 @:nativeGen
 class TimelineFX {
-	public static function main() {}
+    public static function main() {}
 }

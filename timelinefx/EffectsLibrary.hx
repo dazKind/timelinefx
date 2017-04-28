@@ -5,7 +5,7 @@ import haxe.xml.Fast;
 @:nativeGen
 class EffectsLibrary {
 
-	public static var c_particleLimit:Int = 5000;
+    public static var c_particleLimit:Int = 5000;
 
     public static var globalPercentMin:Float = 0.0;
     public static var globalPercentMax:Float = 20.0;
@@ -84,65 +84,65 @@ class EffectsLibrary {
     var updateTime:Float;
     var updateFrequency:Float;
     var currentUpdateTime:Float;
-   	var lookupFrequency:Float;
-   	var lookupFrequencyOverTime:Float;
+    var lookupFrequency:Float;
+    var lookupFrequencyOverTime:Float;
 
-   	public function new() {
-   		setUpdateFrequency(30.0);
-    	lookupFrequency = updateTime;
-    	lookupFrequencyOverTime = 1.0;
-    	clearAll();
-   	}
+    public function new() {
+        setUpdateFrequency(30.0);
+        lookupFrequency = updateTime;
+        lookupFrequencyOverTime = 1.0;
+        clearAll();
+    }
 
-   	public function clearAll():Void {
-   		//name = "";
-   		shapeList = [];
-   		effects = new Map<String, Effect>();
-   		emitters = new Map<String, Emitter>();
-   	}
+    public function clearAll():Void {
+        //name = "";
+        shapeList = [];
+        effects = new Map<String, Effect>();
+        emitters = new Map<String, Emitter>();
+    }
 
-   	public function loadFromXML(_xml:String):Void {
-   		clearAll();
-   		var xml = Xml.parse(_xml);
-   		var fast = new Fast(xml.firstElement());
-   		for (s in fast.node.SHAPES.nodes.IMAGE) {
-   			var img = new AnimImage();
-   			img.loadFromXML(s);
-   			shapeList.push(img);
-   		}
-   		loadEffects(fast.node.EFFECTS);
-   	}
+    public function loadFromXML(_xml:String):Void {
+        clearAll();
+        var xml = Xml.parse(_xml);
+        var fast = new Fast(xml.firstElement());
+        for (s in fast.node.SHAPES.nodes.IMAGE) {
+            var img = new AnimImage();
+            img.loadFromXML(s);
+            shapeList.push(img);
+        }
+        loadEffects(fast.node.EFFECTS);
+    }
 
-   	function loadEffects(_fast:Fast):Void {
-   		for (e in _fast.nodes.EFFECT) {
-   			var effect = new Effect(null);
-   			effect.loadFromXML(e);
-   			addEffect(effect);
-   		}
-   	}
+    function loadEffects(_fast:Fast):Void {
+        for (e in _fast.nodes.EFFECT) {
+            var effect = new Effect(null);
+            effect.loadFromXML(e);
+            addEffect(effect);
+        }
+    }
 
-   	public function addEffect(_e:Effect):Void {
-   		var name = _e.path;
-   		effects.set(name, _e);
-   		for (e in _e.children)
-   			addEmitter(cast(e, Emitter));
-   	}
+    public function addEffect(_e:Effect):Void {
+        var name = _e.path;
+        effects.set(name, _e);
+        for (e in _e.children)
+            addEmitter(cast(e, Emitter));
+    }
 
-   	public function addEmitter(_e:Emitter):Void {
-   		var name = _e.path;
-   		emitters.set(name, _e);
-   		for (e in _e.effects)
-   			addEffect(e);
-   	}
+    public function addEmitter(_e:Emitter):Void {
+        var name = _e.path;
+        emitters.set(name, _e);
+        for (e in _e.effects)
+            addEffect(e);
+    }
 
-   	public function setUpdateFrequency(_freq:Float):Void {
-   		updateFrequency = _freq; // fps
-   		updateTime = 1000.0 / updateFrequency;
-   		currentUpdateTime = updateFrequency;
-   	}
+    public function setUpdateFrequency(_freq:Float):Void {
+        updateFrequency = _freq; // fps
+        updateTime = 1000.0 / updateFrequency;
+        currentUpdateTime = updateFrequency;
+    }
 
-	public static function getCurrentUpdateTime():Float {
-		//TODO:
-		return -1.0;
-	}
+    public static function getCurrentUpdateTime():Float {
+        //TODO:
+        return -1.0;
+    }
 }
