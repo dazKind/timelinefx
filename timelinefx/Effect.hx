@@ -374,9 +374,61 @@ class Effect extends Entity {
         return false;
     }
 
+    public function softKill():Void {
+        this.dying = true;
+    }
+
+    override public function destroy():Void {
+        this.parentEmitter = null;
+        for (i in 0...inUse.length) {
+            for (p in inUse[i]) {
+                p.reset();
+                this.particleManager.releaseParticle(p);
+            }
+            inUse[i] = [];
+        }
+        super.destroy();
+    }
+
+    public function setSpawnDirection():Void {
+        if (this.reverseSpawn) this.spawnDirection = -1;
+        else this.spawnDirection = 1;
+    }
+
     public function setEllipseArc(_degrees:Float):Void {
         this.ellipseArc = _degrees;
         this.ellipseOffset = 90.0 - (_degrees * 0.5);
+    }
+
+    public function setAreaSize(_width:Float, _height:Float):Void {
+        this.overrideSize = true;
+        this.currentWidth = _width;
+        this.currentHeight = _height;
+    }
+
+    public function setLineLength(_length:Float):Void {
+        this.overrideSize = true;
+        this.currentWidth = _length;
+    }
+
+    public function setEmissionAngle(_angle:Float):Void {
+        this.overrideEmissionAngle = true;
+        this.currentEmissionAngle = _angle;
+    }
+
+    public function setEffectAngle(_angle:Float):Void {
+        this.overrideAngle = true;
+        this.angle = _angle;
+    }
+
+    public function setLife(_life:Float):Void {
+        this.overrideLife = true;
+        this.currentLife = _life;
+    }
+
+    public function setAmount(_amount:Float):Void {
+        this.overrideAmount = true;
+        this.currentAmount = _amount;
     }
 
     function _readEmitterArray(_nodes:List<Fast>, _emArray:EmitterArray) {
