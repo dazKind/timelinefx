@@ -123,7 +123,8 @@ class Entity {
     public var speedVec:Vec2;
     public var children:Array<Entity>;
 
-    inline public function new(_other:Entity) {
+    inline public function new(_other:Entity, _effecsLib:EffectsLibrary) {
+        effectsLib = _effecsLib;
 
         if (_other != null) {
             x = _other.x;

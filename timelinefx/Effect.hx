@@ -109,10 +109,113 @@ class Effect extends Entity {
     public var bypassWeight:Bool = false;
     public var isCompiled:Bool = false;
 
-    public function new(_other:Effect, _particleManager:ParticleManager = null) {
-        super(_other);
-        //TODO: 
+    var cAmount:EmitterArray;
+    var cLife:EmitterArray;
+    var cSizeX:EmitterArray;
+    var cSizeY:EmitterArray;
+    var cVelocity:EmitterArray;
+    var cWeight:EmitterArray;
+    var cSpin:EmitterArray;
+    var cStretch:EmitterArray;
+    var cGlobalZ:EmitterArray;
+    var cAlpha:EmitterArray;
+    var cEmissionAngle:EmitterArray;
+    var cEmissionRange:EmitterArray;
+    var cWidth:EmitterArray;
+    var cHeight:EmitterArray;
+    var cEffectAngle:EmitterArray;
+
+    var arrayOwner:Bool = false;
+    var inUse:Array<Array<Particle>>;
+
+    public function new(_other:Effect, _effectsLib:EffectsLibrary, _particleManager:ParticleManager = null) {
+        super(_other, _effectsLib);
+
+        this.inUse = [];
+        for (i in 0...10)
+            this.inUse.push([]);
+
+        if (_other == null) {
+
+            arrayOwner = true;
+
+            this.cAmount = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cLife = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cSizeX = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cSizeY = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cVelocity = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cWeight = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cSpin = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cStretch = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cGlobalZ = new EmitterArray(_effectsLib, EffectsLibrary.globalPercentMin, EffectsLibrary.globalPercentMax);
+            this.cAlpha = new EmitterArray(_effectsLib, 0.0, 1.0);
+            this.cEmissionAngle = new EmitterArray(_effectsLib, EffectsLibrary.angleMin, EffectsLibrary.angleMax);
+            this.cEmissionRange = new EmitterArray(_effectsLib, EffectsLibrary.emissionRangeMin, EffectsLibrary.emissionRangeMax);
+            this.cWidth = new EmitterArray(_effectsLib, EffectsLibrary.dimensionsMin, EffectsLibrary.dimensionsMax);
+            this.cHeight = new EmitterArray(_effectsLib, EffectsLibrary.dimensionsMin, EffectsLibrary.dimensionsMax);
+            this.cEffectAngle = new EmitterArray(_effectsLib, EffectsLibrary.angleMin, EffectsLibrary.angleMax);
+
+        } else {
+            particleManager = _particleManager;
+            arrayOwner = false;
+
+            this.cAmount = _other.cAmount;
+            this.cLife = _other.cLife;
+            this.cSizeX = _other.cSizeX;
+            this.cSizeY = _other.cSizeY;
+            this.cVelocity = _other.cVelocity;
+            this.cWeight = _other.cWeight;
+            this.cSpin = _other.cSpin;
+            this.cStretch = _other.cStretch;
+            this.cGlobalZ = _other.cGlobalZ;
+            this.cAlpha = _other.cAlpha;
+            this.cEmissionAngle = _other.cEmissionAngle;
+            this.cEmissionRange = _other.cEmissionRange;
+            this.cWidth = _other.cWidth;
+            this.cHeight = _other.cHeight;
+            this.cEffectAngle = _other.cEffectAngle;
+
+            setEllipseArc(_other.ellipseArc);
+
+            this.dob = particleManager.getCurrentTime();
+            this.okToRender = false;
+
+            for (c in _other.children) {
+                var e = new Emitter(c, effectsLib, particleManager);
+                e.parentEffect = this;
+                e.setParent(this);
+            }
+        }
     }
 
-    public function loadFromXML(_fast:Fast):Void {}
+    public function loadFromXML(_fast:Fast):Void {
+        this._class = Std.parseInt(_fast.att.TYPE);
+        this.emitAtPoints = cast(Std.parseInt(_fast.att.EMITATPOINTS), Bool);
+        this.mgx = Std.parseInt(_fast.att.MAXGX);
+        this.mgy = Std.parseInt(_fast.att.MAXGY);
+
+        this.emissionType = Std.parseInt(_fast.att.EMISSION_TYPE);
+        this.effectLength = Std.parseInt(_fast.att.EFFECT_LENGTH);
+        this.ellipseArc = Std.parseInt(_fast.att.ELLIPSE_ARC);
+
+        this.handleX = Std.parseInt(_fast.att.HANDLE_X);
+        this.handleY = Std.parseInt(_fast.att.HANDLE_Y);
+
+        this.lockAspect = cast(Std.parseInt(_fast.att.UNIFORM), Bool);
+        this.handleCenter = cast(Std.parseInt(_fast.att.HANDLE_CENTER), Bool);
+        this.traverseEdge = cast(Std.parseInt(_fast.att.TRAVERSE_EDGE), Bool);
+
+        this.name = _fast.att.NAME;
+        this.endBehavior = cast(Std.parseInt(_fast.att.END_BEHAVIOUR), Bool);
+        this.distanceSetByLife = cast(Std.parseInt(_fast.att.DISTANCE_SET_BY_LIFE), Bool);
+        this.reverseSpawn = cast(Std.parseInt(_fast.att.REVERSE_SPAWN_DIRECTION), Bool);
+
+        this.path = this.name;
+        // TODO: building path, why is this even necessary? to a have unique id or something?!
+    }
+
+    public function setEllipseArc(_degrees:Float):Void {
+        this.ellipseArc = _degrees;
+        this.ellipseOffset = 90.0 - (_degrees * 0.5);
+    }
 }

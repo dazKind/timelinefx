@@ -115,8 +115,7 @@ class EffectsLibrary {
 
     function loadEffects(_fast:Fast):Void {
         for (e in _fast.nodes.EFFECT) {
-            var effect = new Effect(null);
-            effect.effectsLib = this;
+            var effect = new Effect(null, this);
             effect.loadFromXML(e);
             addEffect(effect);
         }

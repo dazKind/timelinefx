@@ -9,8 +9,10 @@ class Emitter extends Entity {
 
     public var effects:Map<String, Effect>;
 
-    public function new(_other:Entity) {
-        super(_other);
+    public var parentEffect:Effect;
+
+    public function new(_other:Entity, _effectsLib:EffectsLibrary, _particeManager:ParticleManager) {
+        super(_other, _effectsLib);
 
         effects = new Map<String, Effect>();
     }
