@@ -431,6 +431,89 @@ class Effect extends Entity {
         this.currentAmount = _amount;
     }
 
+    public function setVelocity(_velocity:Float):Void {
+        this.overrideVelocity = true;
+        this.currentVelocity = _velocity;
+    }
+
+    public function setSpin(_spin:Float):Void {
+        this.overrideSpin = true;
+        this.currentSpin = _spin;
+    }
+
+    public function setWeight(_weight:Float):Void {
+        this.overrideWeight = true;
+        this.currentWeight = _weight;
+    }
+
+    public function setSize(_sx:Float, _sy:Float):Void {
+        this.overrideSizeX = true;
+        this.overrideSizeY = true;
+        this.currentSizeX = _sx;
+        this.currentSizeY = _sy;
+    }
+
+    public function setSizeX(_sx:Float):Void {
+        this.overrideSizeX = true;
+        this.currentSizeX = _sx;
+    }
+
+    public function setSizeY(_sy:Float):Void {
+        this.overrideSizeY = true;
+        this.currentSizeY = _sy;
+    }
+
+    public function setAlpha(_alpha:Float):Void {
+        this.overrideAlpha = true;
+        this.currentAlpha = _alpha;
+    }
+
+    public function setEmissionRange(_emissionRange:Float):Void {
+        this.overrideEmissionRange = true;
+        this.currentEmissionRange = _emissionRange;
+    }
+
+    public function setZ(_z:Float):Void {
+        this.overrideGlobalZ = true;
+        this.z = _z;
+    }
+
+    public function setStretch(_stretch:Float):Void {
+        this.overrideStretch = true;
+        this.currentStretch = _stretch;
+    }
+
+    public function addInUse(_layer:Int, _p:Particle):Void {
+        this.setGroupParticles(true);
+        this.inUse[_layer].push(_p);
+    }
+
+    override public function compileAll():Void {
+        if (this.isCompiled) return;
+
+        this.cLife.compile();
+        this.cAmount.compile();
+        this.cSizeX.compile();
+        this.cSizeY.compile();
+        this.cVelocity.compile();
+        this.cWeight.compile();
+        this.cSpin.compile();
+        this.cAlpha.compile();
+        this.cEmissionAngle.compile();
+        this.cEmissionRange.compile();
+        this.cWidth.compile();
+        this.cHeight.compile();
+        this.cEffectAngle.compile();
+        this.cStretch.compile();
+        this.cGlobalZ.compile();
+        this.cGlobalZ.setCompiled( 0, 1.0 );
+
+        for (e in children)
+            e.compileAll();
+
+        this.isCompiled = true;
+    }
+
     function _readEmitterArray(_nodes:List<Fast>, _emArray:EmitterArray) {
         for (n in _nodes) {
             var attr = _emArray.add(Std.parseFloat(n.att.FRAME), Std.parseFloat(n.att.VALUE));

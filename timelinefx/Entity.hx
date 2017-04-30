@@ -500,4 +500,16 @@ class Entity {
         this.x += _xAmount;
         this.y += _yAmount;
     }
+
+    public function compileAll():Void {}
+
+    public function setGroupParticles(_v:Bool):Void {
+        for (e in children)
+            e.setGroupParticles(_v);
+    }
+
+    public function getImages(_images:Array<String>):Void {
+        for (e in children)
+            e.getImages(_images);
+    }
 }
