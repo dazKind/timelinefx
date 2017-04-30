@@ -106,7 +106,7 @@ class EmitterArray {
 				var p3x = _a.frame;
 				var p3y = _a.value;
 
-				return -1; //getCubicBezier(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, _t, _yMin, _yMax).y;
+				return getCubicBezier(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y, _t, _yMin, _yMax).y;
 			} else {
 				var p1x = _a.c0x;
 				var p1y = _a.c0y;
@@ -143,13 +143,59 @@ class EmitterArray {
       	return {x:x, y:y};
 	}
 
-	public function getCubicBezier():Float {
-		return -1;
+	public function getCubicBezier(
+		_p0x:Float, _p0y:Float, _p1x:Float, _p1y:Float, _p2x:Float, _p2y:Float, _p3x:Float, _p3y:Float, 
+		_t:Float, _yMin:Float, _yMax:Float, ?_clamp:Bool = true):{x:Float, y:Float} {
+		var x = (1 - _t) * (1 - _t) * (1 - _t) * _p0x + 3 * _t * (1 - _t) * (1 - _t) * _p1x + 3 * _t * _t * (1 - _t) * _p2x + _t * _t * _t * _p3x;
+		var y = (1 - _t) * (1 - _t) * (1 - _t) * _p0y + 3 * _t * (1 - _t) * (1 - _t) * _p1y + 3 * _t * _t * (1 - _t) * _p2y + _t * _t * _t * _p3y;
+		if (x < _p0x) x = _p0x;
+      	if (x > _p3x) x = _p3x;
+      	if (_clamp) {
+      		if (y < _yMin) y = _yMin;
+          	if (y > _yMax) y = _yMax;
+      	}
+      	return {x:x, y:y};
 	}
 
-	public function interpolate(_frame:Float, ?_bezier:Bool = true):Float return interpolateOT(_frame, 1.0, _bezier);
+	public function interpolate(_frame:Float, ?_bezier:Bool = true):Float 
+		return interpolateOT(_frame, 1.0, _bezier);
 
-	public function interpolateOT(_age:Float, _lifeTime:Float, ?_bezier:Bool = true):Float {
-		return -1;
+	public function interpolateOT(_age:Float, _lifetime:Float, ?_bezier:Bool = true):Float {
+		var lasty:Float = 0.0;
+		var lastf:Float = 0.0;
+		var lastec:AttributeNode = null;
+
+		for (it in attributes) {
+			var frame:Float = it.frame * _lifetime;
+			if (_age < frame) {
+				var p = (_age - lastf) / (frame - lastf);
+				if (_bezier) {
+					var bezierValue = getBezierValue(lastec, it, p, this.min, this.max);
+					if (bezierValue != 0.0)
+						return bezierValue;
+				}
+				return lasty - p * (lasty - it.value);
+			}
+			lasty = it.value;
+			lastf = frame;
+			if (_bezier) lastec = it;
+		}
+		return lasty;
+	}
+
+	public function getOT(_age:Float, _lifetime:Float):Float {
+		var frame:Float = 0.0;
+		if (_lifetime > 0.0)
+			frame = _age / _lifetime * this.life / effectsLib.lookupFrequencyOverTime;
+		return this.get(Math.round(frame));
+	}
+
+	public function getMaxValue():Float {
+		var max:Float = 0.0;
+		for (it in attributes) {
+			if (it.value > max)
+				max = it.value;
+		}
+		return max;
 	}
 }

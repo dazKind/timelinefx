@@ -85,7 +85,7 @@ class EffectsLibrary {
     var updateFrequency:Float;
     public var currentUpdateTime:Float;
     public var lookupFrequency:Float;
-    var lookupFrequencyOverTime:Float;
+    public var lookupFrequencyOverTime:Float;
 
     public function new() {
         setUpdateFrequency(30.0);
