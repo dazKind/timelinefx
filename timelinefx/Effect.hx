@@ -34,7 +34,7 @@ class Effect extends Entity {
     public var path:String = "";
 
     public var _class:Int = EffectTypes.TypePoint;
-    public var currentEffectFrame:Int = 0;
+    public var currentEffectFrame:Float = 0.0;
     public var handleCenter:Bool = false;
 
     public var source:String = null;
@@ -48,7 +48,7 @@ class Effect extends Entity {
     public var emitAtPoints:Bool = false;
     public var emissionType:Int = EmissionTypes.EmInwards;
     public var effectLength:Int = 0;
-    public var parentEmitter:Effect = null;
+    public var parentEmitter:Emitter = null;
     public var spawnAge:Float = 0.0;
     public var index:Int = 0;
     public var particleCount:Int = 0;
@@ -206,16 +206,183 @@ class Effect extends Entity {
         this.traverseEdge = cast(Std.parseInt(_fast.att.TRAVERSE_EDGE), Bool);
 
         this.name = _fast.att.NAME;
-        this.endBehavior = cast(Std.parseInt(_fast.att.END_BEHAVIOUR), Bool);
+        this.endBehavior = Std.parseInt(_fast.att.END_BEHAVIOUR);
         this.distanceSetByLife = cast(Std.parseInt(_fast.att.DISTANCE_SET_BY_LIFE), Bool);
         this.reverseSpawn = cast(Std.parseInt(_fast.att.REVERSE_SPAWN_DIRECTION), Bool);
 
         this.path = this.name;
-        // TODO: building path, why is this even necessary? to a have unique id or something?!
+        var p = _fast.x.parent;
+        while(p != null) {
+            if (p.nodeName != "")
+                this.path = p.nodeName + "/" + this.path;
+            p = p.parent;
+        }
+
+        if (_fast.hasNode.ANIMATION_PROPERTIES) {
+            var a = _fast.node.ANIMATION_PROPERTIES;
+            this.frames = Std.parseInt(_fast.att.FRAMES);
+            this.animWidth = Std.parseInt(_fast.att.WIDTH);
+            this.animHeight = Std.parseInt(_fast.att.HEIGHT);
+            this.animX = Std.parseInt(_fast.att.X);
+            this.animY = Std.parseInt(_fast.att.Y);
+            this.seed = Std.parseInt(_fast.att.SEED);
+            this.looped = cast(Std.parseInt(_fast.att.LOOPED), Bool);
+            this.zoom = Std.parseFloat(_fast.att.ZOOM);
+            this.frameOffset = Std.parseInt(_fast.att.FRAME_OFFSET);
+        }
+
+        _readEmitterArray(_fast.nodes.AMOUNT, cAmount);
+        _readEmitterArray(_fast.nodes.LIFE, cLife);
+        _readEmitterArray(_fast.nodes.SIZEX, cSizeX);
+        _readEmitterArray(_fast.nodes.SIZEY, cSizeY);
+        _readEmitterArray(_fast.nodes.VELOCITY, cVelocity);
+        _readEmitterArray(_fast.nodes.WEIGHT, cWeight);
+        _readEmitterArray(_fast.nodes.SPIN, cSpin);
+        _readEmitterArray(_fast.nodes.ALPHA, cAlpha);
+        _readEmitterArray(_fast.nodes.EMISSIONANGLE, cEmissionAngle);
+        _readEmitterArray(_fast.nodes.EMISSIONRANGE, cEmissionRange);
+        _readEmitterArray(_fast.nodes.AREA_WIDTH, cWidth);
+        _readEmitterArray(_fast.nodes.AREA_HEIGHT, cHeight);
+        _readEmitterArray(_fast.nodes.ANGLE, cEffectAngle);
+        _readEmitterArray(_fast.nodes.GLOBAL_ZOOM, cGlobalZ);
+
+        if (_fast.hasNode.STRETCH) {
+            for (n in _fast.nodes.STRETCH) {
+                var attr = cStretch.add(Std.parseFloat(n.att.FRAME), Std.parseFloat(n.att.VALUE));
+                if (n.hasNode.CURVE) attr.loadFromXML(n.node.CURVE);
+            }
+        } else
+            cStretch.add(0.0, 1.0);
+
+        for (p in _fast.nodes.PARTICLE) {
+            var em = new Emitter(null, effectsLib, particleManager);
+            em.loadFromXML(p);
+            this.addChild(em);
+        }
+        
+    }
+
+    override public function update():Bool {
+        capture();
+        this.age = this.particleManager.getCurrentTime() - this.dob;
+
+        if (this.spawnAge < this.age)
+            this.spawnAge = this.age;
+
+        if (this.effectLength > 0 && this.age > this.effectLength) {
+            this.dob = this.particleManager.getCurrentTime();
+            this.age = 0;
+        }
+
+        this.currentEffectFrame = this.age / effectsLib.lookupFrequency;
+        var cFrame:Int = Math.round(this.currentEffectFrame);
+
+        if (!this.overrideSize) {
+            switch(this._class) {
+                case TypePoint: 
+                    this.currentWidth = 0.0; 
+                    this.currentHeight = 0.0;
+                case TypeArea:
+                case TypeEllipse:
+                    this.currentWidth = this.cWidth.get(cFrame);
+                    this.currentHeight = this.cHeight.get(cFrame);
+                case TypeLine:
+                    this.currentWidth = this.cWidth.get(cFrame);
+                    this.currentHeight = 0.0;
+            }
+        }
+
+        if (this.handleCenter && this._class != TypePoint) {
+            this.handleX = Math.round(this.currentWidth * 0.5);
+            this.handleY = Math.round(this.currentHeight * 0.5);
+        } else {
+            this.handleX = 0;
+            this.handleY = 0;
+        }
+
+        if (this.hasParticles() || this.doesNotTimeout)
+            this.idleTime = 0;
+        else
+            ++this.idleTime;
+
+        if (this.parentEmitter != null) {
+            var parentEffect = this.parentEmitter.parentEffect;
+            if (!this.overrideLife) this.currentLife = this.cLife.get(cFrame) * parentEffect.currentLife;
+            if (!this.overrideAmount) this.currentAmount = this.cAmount.get(cFrame) * parentEffect.currentAmount;
+            if (!this.overrideSizeX) this.currentSizeX = this.cSizeX.get(cFrame) * parentEffect.currentSizeX;
+            if (this.lockAspect)                
+                if (!this.overrideSizeY) this.currentSizeY = this.currentSizeX * parentEffect.currentSizeY;
+            else
+                if (!this.overrideSizeY) this.currentSizeY = this.cSizeY.get(cFrame) * parentEffect.currentSizeY;
+            if (!this.overrideVelocity) this.currentVelocity = this.cVelocity.get(cFrame) * parentEffect.currentVelocity;
+            if (!this.overrideWeight) this.currentWeight = this.cWeight.get(cFrame) * parentEffect.currentWeight;
+            if (!this.overrideSpin) this.currentSpin = this.cSpin.get(cFrame) * parentEffect.currentSpin;
+            if (!this.overrideAlpha) this.currentAlpha = this.cAlpha.get(cFrame) * parentEffect.currentAlpha;
+            if (!this.overrideEmissionAngle) this.currentEmissionAngle = this.cEmissionAngle.get(cFrame) * parentEffect.currentEmissionAngle;
+            if (!this.overrideEmissionRange) this.currentEmissionRange = this.cEmissionRange.get(cFrame) * parentEffect.currentEmissionRange;
+            if (!this.overrideAngle) this.angle = this.cEffectAngle.get(cFrame);
+            if (!this.overrideStretch) this.currentStretch = this.cStretch.get(cFrame) * parentEffect.currentStretch;
+            if (!this.overrideGlobalZ) this.currentGlobalZ = this.cGlobalZ.get(cFrame) * parentEffect.currentGlobalZ;
+
+            this.dying = parentEmitter.dying;
+
+        } else {
+            if (!this.overrideLife) this.currentLife = this.cLife.get(cFrame);
+            if (!this.overrideAmount) this.currentAmount = this.cAmount.get(cFrame);
+            if (!this.overrideSizeX) this.currentSizeX = this.cSizeX.get(cFrame);
+            if (this.lockAspect)                
+                if (!this.overrideSizeY) this.currentSizeY = this.currentSizeX;
+            else
+                if (!this.overrideSizeY) this.currentSizeY = this.cSizeY.get(cFrame);
+
+            if (!this.overrideVelocity) this.currentVelocity = this.cVelocity.get(cFrame);
+            if (!this.overrideWeight) this.currentWeight = this.cWeight.get(cFrame);
+            if (!this.overrideSpin) this.currentSpin = this.cSpin.get(cFrame);
+            if (!this.overrideAlpha) this.currentAlpha = this.cAlpha.get(cFrame);
+            if (!this.overrideEmissionAngle) this.currentEmissionAngle = this.cEmissionAngle.get(cFrame);
+            if (!this.overrideEmissionRange) this.currentEmissionRange = this.cEmissionRange.get(cFrame);
+            if (!this.overrideAngle) this.angle = this.cEffectAngle.get(cFrame);
+            if (!this.overrideStretch) this.currentStretch = this.cStretch.get(cFrame);
+            if (!this.overrideGlobalZ) this.currentGlobalZ = this.cGlobalZ.get(cFrame);
+        }
+
+        if (!this.overrideGlobalZ) this.z = this.currentGlobalZ;
+        if (this.currentWeight == 0.0)
+            this.bypassWeight = true;
+
+        super.update();
+
+        if (this.idleTime > this.particleManager.getIdleTime())
+            this.dead = true;
+
+        if (this.dead) {
+            if (this.children.length == 0) {
+                this.destroy();
+                return false;
+            } else {
+                this.killChildren();
+            }
+        }
+
+        return true;
+    }
+
+    public function hasParticles():Bool {
+        for (e in children)
+            if (e.children.length > 0)
+                return true;
+        return false;
     }
 
     public function setEllipseArc(_degrees:Float):Void {
         this.ellipseArc = _degrees;
         this.ellipseOffset = 90.0 - (_degrees * 0.5);
+    }
+
+    function _readEmitterArray(_nodes:List<Fast>, _emArray:EmitterArray) {
+        for (n in _nodes) {
+            var attr = _emArray.add(Std.parseFloat(n.att.FRAME), Std.parseFloat(n.att.VALUE));
+            if (n.hasNode.CURVE) attr.loadFromXML(n.node.CURVE);
+        }
     }
 }

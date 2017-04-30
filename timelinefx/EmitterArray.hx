@@ -1,5 +1,7 @@
 package timelinefx;
 
+import haxe.xml.Fast;
+
 @:nativeGen
 class EmitterArray {
 	public var life:Float = 0.0;
@@ -77,7 +79,7 @@ class EmitterArray {
 		compiled = true;
 	}
 
-	public function add(_frame:Int, _value:Float):AttributeNode {
+	public function add(_frame:Float, _value:Float):AttributeNode {
 		compiled = false;
 		var e = new AttributeNode();
 		e.frame = _frame;

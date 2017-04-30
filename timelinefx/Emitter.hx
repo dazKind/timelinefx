@@ -6,6 +6,7 @@ import haxe.xml.Fast;
 class Emitter extends Entity {
     
     public var path:String = "";
+    public var dying:Bool = false;
 
     public var effects:Map<String, Effect>;
 

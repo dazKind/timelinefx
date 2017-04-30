@@ -4,7 +4,7 @@ import haxe.xml.Fast;
 
 @:nativeGen
 class AttributeNode {
-    public var frame:Int = 0;
+    public var frame:Float = 0.0;
     public var value:Float = 0.0;
     public var isCurve:Bool = false;
     public var c0x:Float = 0.0;
